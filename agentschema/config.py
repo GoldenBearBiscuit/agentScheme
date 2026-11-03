@@ -1,7 +1,7 @@
 """配置解析：把「.env + 环境变量」收敛成一个 Config。
 
 流程位置：`create_agent()` 与 `DeepSeekProvider` 的第一步。它定下两件事——
-用哪个模型/密钥，以及产物（expressions.json / llm_calls.jsonl）落在哪个 workspace。
+用哪个 LLM / 密钥，以及产物（expressions.json / llm_calls.jsonl）落在哪个 workspace。
 
 优先级（按实际生效顺序）：
     进程已有环境变量 > .env > .env.local > 内置默认值
@@ -120,7 +120,7 @@ class Config:
             api_key=os.environ.get("DEEPSEEK_API_KEY", "").strip(),
             # 去掉尾部斜杠，后面拼 "/chat/completions" 时才不会出现双斜杠
             base_url=os.environ.get("DEEPSEEK_BASE_URL", DEFAULT_BASE_URL).rstrip("/"),
-            # 空字符串也算没配，回落到默认模型
+            # 空字符串也算没配，回落到默认 LLM
             model=os.environ.get("DEEPSEEK_MODEL", DEFAULT_MODEL).strip() or DEFAULT_MODEL,
             timeout=int(os.environ.get("AGENTSCHEMA_TIMEOUT", "120")),
             offline=offline or offline_env in {"1", "true", "yes", "on"},

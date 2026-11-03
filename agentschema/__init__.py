@@ -1,11 +1,11 @@
-"""agentschema：三拓扑（上下文 / 功能 / 执行）驱动的可验证 agent 内核。
+"""agentschema：三个模型（上下文 / 功能 / 执行）驱动的可验证 agent 内核。
 
-三条拓扑共享一个 LoopEngine：
-- 功能拓扑保存静态能力（稳定 ID + 契约 + Oracle），不属于任何风格；
-- 执行拓扑只保存阶段计划（Profile），按 CapabilityRef 引用能力；
-- 上下文拓扑保存任务、阶段结果、证据与运行报告。
+三个模型共享一个 LoopEngine：
+- 功能模型保存静态能力（稳定 ID + 契约 + Oracle），不属于任何风格；
+- 执行模型只保存阶段计划（Profile），按 CapabilityRef 引用能力；
+- 上下文模型保存任务、阶段结果、证据与运行报告。
 
-克隆/测试的期望值来自参考实现实测，模型只能提供候选表达式或输入用例。
+克隆/测试的期望值来自参考实现实测，LLM 只能提供候选表达式或输入用例。
 """
 
 from __future__ import annotations
@@ -13,15 +13,15 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-from .capabilities import ExpressionStore, builtin_plans, seed_functional_topology
+from .capabilities import ExpressionStore, builtin_plans, seed_functional_model
 from .config import Config
-from .topology import (
+from .model import (
     Capability,
     CapabilityRef,
-    ContextTopology,
+    ContextModel,
     ExecutionPlan,
     ExecutionStep,
-    FunctionalTopology,
+    FunctionalModel,
     KernelError,
     LoopEngine,
     MainAgent,
@@ -45,7 +45,7 @@ def create_agent(
 
     处理：
         1. 解析配置得到 workspace
-        2. 建静态功能拓扑，再从 expressions.json 恢复已固化的克隆能力
+        2. 建静态功能模型，再从 expressions.json 恢复已固化的克隆能力
         3. 注册内置执行计划（kiss / pi / clone / test / verification）
 
     出参：已就绪的 MainAgent。
@@ -56,7 +56,7 @@ def create_agent(
         providers = execution_providers(root, offline=offline)
     config = Config.load(root, offline=offline)
     store = ExpressionStore(config.expressions_path)
-    functional = seed_functional_topology()
+    functional = seed_functional_model()
     store.load(functional)
     functional.expression_store = store
     agent = MainAgent(functional, providers=providers)
@@ -68,10 +68,10 @@ def create_agent(
 __all__ = [
     "Capability",
     "CapabilityRef",
-    "ContextTopology",
+    "ContextModel",
     "ExecutionPlan",
     "ExecutionStep",
-    "FunctionalTopology",
+    "FunctionalModel",
     "KernelError",
     "LoopEngine",
     "MainAgent",

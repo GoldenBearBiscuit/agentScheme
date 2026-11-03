@@ -13,12 +13,12 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .compare import compare
-from .topology import (
+from .model import (
     Capability,
     CapabilityRef,
     ExecutionPlan,
     ExecutionStep,
-    FunctionalTopology,
+    FunctionalModel,
     KernelError,
 )
 
@@ -369,7 +369,7 @@ class ExpressionStore:
     def __init__(self, path: Path) -> None:
         self.path = path
 
-    def load(self, functional: FunctionalTopology) -> None:
+    def load(self, functional: FunctionalModel) -> None:
         if not self.path.is_file():
             return
         records = json.loads(self.path.read_text(encoding="utf-8"))
@@ -392,7 +392,7 @@ class ExpressionStore:
 
 
 def register_candidate(
-    functional: FunctionalTopology,
+    functional: FunctionalModel,
     source: PythonSource,
     candidate: ExpressionCandidate,
     verification: dict[str, Any],
@@ -433,8 +433,8 @@ def register_candidate(
     return report
 
 
-def seed_functional_topology() -> FunctionalTopology:
-    functional = FunctionalTopology()
+def seed_functional_model() -> FunctionalModel:
+    functional = FunctionalModel()
     capabilities = (
         Capability(
             "text.normalize", text_normalize, "Collapse whitespace",

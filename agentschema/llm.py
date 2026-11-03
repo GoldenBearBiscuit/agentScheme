@@ -30,19 +30,19 @@ class LLMUnavailable(LLMError):
 
 
 def _parse_json(text: str) -> dict[str, Any]:
-    """从模型输出里抠出一个 JSON 对象。
+    """从LLM输出里抠出一个 JSON 对象。
 
-    模型经常不老实：包 ```json 代码块、前后写「好的，结果如下」。
+    LLM经常不老实：包 ```json 代码块、前后写「好的，结果如下」。
     这里不去猜语义，只做"取第一个 { 到最后一个 }"的粗暴截取，然后交给 json 解析。
 
     入参：
-        text: 模型返回的原始 content 字符串。
+        text: LLM返回的原始 content 字符串。
 
     处理：
         1. 去掉首尾空白
         2. 若以 ``` 开头，取第一个代码块内容，并剥掉紧跟的 "json" 标记
         3. 定位首尾大括号做切片
-        4. json.loads；失败时把片段塞进异常信息，便于排查是模型问题还是提示词问题
+        4. json.loads；失败时把片段塞进异常信息，便于排查是LLM问题还是提示词问题
 
     出参：
         解析出的 dict。
@@ -52,7 +52,7 @@ def _parse_json(text: str) -> dict[str, Any]:
     """
     raw = (text or "").strip()
     if raw.startswith("```"):
-        # count >= 2 才说明有闭合围栏，否则原样保留（模型可能只打了开头）
+        # count >= 2 才说明有闭合围栏，否则原样保留（LLM可能只打了开头）
         raw = raw.split("```", 2)[1] if raw.count("```") >= 2 else raw
         if raw.lstrip().startswith("json"):
             raw = raw.lstrip()[4:]
@@ -95,7 +95,7 @@ class LLM:
 
     @property
     def available(self) -> bool:
-        """现在能不能真的调模型：有 key 且没被 --offline 关掉。"""
+        """现在能不能真的调LLM：有 key 且没被 --offline 关掉。"""
         return bool(self.cfg.api_key) and not self.cfg.offline
 
     def describe(self) -> str:
@@ -197,7 +197,7 @@ class LLM:
             tags: 调用级关联字段，合并覆盖实例级 self.tags。
 
         处理：
-            1. 组装一条：时间、phase/tool/span 关联、模型、耗时、token、
+            1. 组装一条：时间、phase/tool/span 关联、LLM、耗时、token、
                三段文本各截断（system 400 / user 1000 / response 2000 字——
                jsonl 是给人排查和 UI 展示的，全文有需要时再加大）；
             2. 追加写盘；workspace 不存在或写失败一律静默——
@@ -243,7 +243,7 @@ class LLM:
 
         处理：
             1. available 为假直接抛 LLMUnavailable，让上层走启发式兜底
-            2. 带上 response_format=json_object，减少模型乱写格式的概率
+            2. 带上 response_format=json_object，减少LLM乱写格式的概率
             3. 记 usage，取出 choices[0].message.content
             4. 交给 _parse_json 做容错解析
             5. 成功或失败都会写一条 llm_calls.jsonl（DeepSeek 的 API 是
@@ -268,7 +268,7 @@ class LLM:
                         {"role": "user", "content": user},
                     ],
                     "temperature": temperature,
-                    # 让服务端保证返回合法 JSON；模型不遵守时 _parse_json 再兜一层
+                    # 让服务端保证返回合法 JSON；LLM不遵守时 _parse_json 再兜一层
                     "response_format": {"type": "json_object"},
                     "stream": False,
                 }
@@ -355,7 +355,7 @@ class LLM:
     ) -> dict[str, Any]:
         """带工具表的对话轮（OpenAI function calling 协议，创造模式的引擎）。
 
-        流程位置：agent.py 的对话循环每一步都调它——模型要么回文本
+        流程位置：agent.py 的对话循环每一步都调它——LLM要么回文本
         （对话结束），要么回 tool_calls（agent 执行后把结果以 role:"tool"
         回填，再调本方法继续）。
 

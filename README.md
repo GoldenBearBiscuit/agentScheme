@@ -1,18 +1,18 @@
 # agentschema
 
-三拓扑（上下文 / 功能 / 执行）驱动的可验证 agent 内核。同一套静态能力库，可以用不同执行风格（kiss / pi）跑，也可以用模型去"吸收"一个已有纯函数（clone / test / verification），但**期望值永远来自参考实现的真实运行结果，不来自模型**。
+三个模型（上下文 / 功能 / 执行）驱动的可验证 agent 内核。同一套静态能力库，可以用不同执行风格（kiss / pi）跑，也可以用 LLM 去"吸收"一个已有纯函数（clone / test / verification），但**期望值永远来自参考实现的真实运行结果，不来自 LLM**。
 
 零第三方依赖（纯 stdlib），Python ≥ 3.10。
 
-## 三拓扑
+## 三个模型
 
-| 拓扑 | 契约 | 职责 |
+| 模型 | 契约 | 职责 |
 |---|---|---|
-| 上下文拓扑 | `TaskSpec` / `ContextTopology` / `RunReport` | 保存任务、阶段结果、证据、产物和运行报告 |
-| 功能拓扑 | `FunctionalTopology` / `Capability` / `CapabilityRef` | 注册可寻址函数及其输入、输出、来源和 Oracle；不绑定执行风格 |
-| 执行拓扑 | `ExecutionPlan` / `ExecutionStep` / `LoopEngine` / `MainAgent` | 注册和切换阶段计划、Provider 与结果投影 |
+| 上下文模型 | `TaskSpec` / `ContextModel` / `RunReport` | 保存任务、阶段结果、证据、产物和运行报告 |
+| 功能模型 | `FunctionalModel` / `Capability` / `CapabilityRef` | 注册可寻址函数及其输入、输出、来源和 Oracle；不绑定执行风格 |
+| 执行模型 | `ExecutionPlan` / `ExecutionStep` / `LoopEngine` / `MainAgent` | 注册和切换阶段计划、Provider 与结果投影 |
 
-三条拓扑共享一个 `LoopEngine`。Tracing 横切三者；`pi` 与 `kiss` 对同一任务可以产生不同 Trace，但最终功能输出必须一致。
+三个模型共享一个 `LoopEngine`。Tracing 横切三者；`pi` 与 `kiss` 对同一任务可以产生不同 Trace，但最终功能输出必须一致。
 
 ## 五个 Profile
 
@@ -20,8 +20,8 @@
 |---|---|---|
 | `kiss` | `act` | 直接调用任务指定的共享能力 |
 | `pi` | `prepare → act → observe` | 多步准备和观察，结果仍取 `act` |
-| `clone` | `load → propose → verify → repair → verify_repair → register` | 模型只生成受限表达式；参考实现实测结果才是期望值；首次拒绝后最多修正一次 |
-| `test` | `load → cases → candidate → verify` | 模型只生成输入用例，不生成期望值 |
+| `clone` | `load → propose → verify → repair → verify_repair → register` | LLM 只生成受限表达式；参考实现实测结果才是期望值；首次拒绝后最多修正一次 |
+| `test` | `load → cases → candidate → verify` | LLM 只生成输入用例，不生成期望值 |
 | `verification` | `load → candidate → verify` | 差分验证 + 6 个负向变异，检查验证器能否拒绝错误实现 |
 
 ## 快速开始
@@ -42,9 +42,9 @@ python -m agentschema verify --path <你的纯函数文件> --symbol <函数名>
 
 ```
 agentschema/
-  topology.py      三拓扑契约 + LoopEngine + MainAgent
+  model.py      三个模型的契约 + LoopEngine + MainAgent
   capabilities.py  静态能力表、5 个内置 Plan、表达式持久化（ExpressionStore）
-  providers.py     DeepSeek Provider（执行拓扑的可插拔依赖）
+  providers.py     DeepSeek Provider（执行模型的可插拔依赖）
   cli.py           命令行（agents / capabilities / run / clone / verify / test）
   compare.py       行为等价比较（差分验证的判定函数）
   config.py        .env + 环境变量 → Config
@@ -54,7 +54,7 @@ tests/             10 个用例，stdlib unittest
 scripts/           run_tests.py（本机 ACL 兼容引导）
 ```
 
-运行产物写在 `workspace/`（`expressions.json` 存已固化的克隆能力，`llm_calls.jsonl` 存模型调用记录），已在 `.gitignore` 中忽略。
+运行产物写在 `workspace/`（`expressions.json` 存已固化的克隆能力，`llm_calls.jsonl` 存 LLM 调用记录），已在 `.gitignore` 中忽略。
 
 ## 测试
 

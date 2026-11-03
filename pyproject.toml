@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "agentschema"
 version = "0.1.0"
-description = "三拓扑（上下文/功能/执行）驱动的可验证 agent 内核"
+description = "三个模型（上下文/功能/执行）驱动的可验证 agent 内核"
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = []

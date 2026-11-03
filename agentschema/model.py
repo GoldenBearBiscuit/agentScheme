@@ -1,4 +1,4 @@
-"""Three topology contracts and one profile-driven loop engine."""
+"""Three models (context, functional, execution) on one profile-driven loop engine."""
 
 from __future__ import annotations
 
@@ -58,7 +58,7 @@ _KINDS: dict[str, Callable[[Any], bool]] = {
 }
 
 
-class FunctionalTopology:
+class FunctionalModel:
     """Static, addressable capabilities; execution plans never own these functions."""
 
     def __init__(self, *, expression_store: Any = None) -> None:
@@ -136,7 +136,7 @@ class ExecutionPlan:
 
 
 @dataclass
-class ContextTopology:
+class ContextModel:
     run_id: str
     profile: str
     task: TaskSpec
@@ -169,9 +169,9 @@ class RunReport:
 
 def _resolve(
     value: Any,
-    context: ContextTopology,
+    context: ContextModel,
     provider: Any,
-    functional: FunctionalTopology,
+    functional: FunctionalModel,
 ) -> Any:
     if not isinstance(value, str) or not value.startswith("$"):
         return value
@@ -199,12 +199,12 @@ def _resolve(
 
 
 class LoopEngine:
-    def __init__(self, functional: FunctionalTopology) -> None:
+    def __init__(self, functional: FunctionalModel) -> None:
         self.functional = functional
 
     def run(self, plan: ExecutionPlan, task: TaskSpec, *, provider: Any = None) -> RunReport:
         run_id = f"run_{uuid.uuid4().hex[:12]}"
-        context = ContextTopology(run_id=run_id, profile=plan.profile, task=task)
+        context = ContextModel(run_id=run_id, profile=plan.profile, task=task)
         report = RunReport(run_id, task.task_id, plan.profile, "running")
         for step in plan.steps:
             started = time.perf_counter()
@@ -255,7 +255,7 @@ class MainAgent:
 
     def __init__(
         self,
-        functional: FunctionalTopology,
+        functional: FunctionalModel,
         *,
         providers: dict[str, Any] | None = None,
     ) -> None:

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from . import create_agent
-from .topology import KernelError, TaskSpec
+from .model import KernelError, TaskSpec
 
 
 def _json_object(raw: str) -> dict[str, Any]:
@@ -32,7 +32,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--offline", action="store_true")
     sub = parser.add_subparsers(dest="command", required=True)
     sub.add_parser("agents", help="list registered execution profiles")
-    sub.add_parser("capabilities", help="list the static functional topology")
+    sub.add_parser("capabilities", help="list the static functional model")
 
     run = sub.add_parser("run", help="run one capability through a selected style")
     run.add_argument("--profile", required=True)

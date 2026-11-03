@@ -1,7 +1,7 @@
-"""执行拓扑的 LLM Provider；Provider 不属于功能身份。
+"""执行模型的 LLM Provider；Provider 不属于功能身份。
 
-同一份功能拓扑可以被不同 Provider 驱动：clone / test 两个 Profile 需要模型
-生成"候选"或"输入用例"，但期望值永远来自参考实现，不来自模型。
+同一份功能模型可以被不同 Provider 驱动：clone / test 两个 Profile 需要 LLM
+生成"候选"或"输入用例"，但期望值永远来自参考实现，不来自 LLM。
 """
 
 from __future__ import annotations
