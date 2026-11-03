@@ -54,7 +54,7 @@ agentschema/
   llm.py               stdlib urllib 实现的 OpenAI 兼容客户端
   log.py               日志门面（默认 stderr）
 tests/             10 个用例，stdlib unittest
-scripts/           run_tests.py（本机 ACL 兼容引导）
+scripts/           run_tests.py（测试入口：sys.path 引导 + unittest 转发）
 ```
 
 运行产物写在 `workspace/`（`expressions.json` 存已固化的克隆能力，`llm_calls.jsonl` 存 LLM 调用记录），已在 `.gitignore` 中忽略。
@@ -62,7 +62,9 @@ scripts/           run_tests.py（本机 ACL 兼容引导）
 ## 测试
 
 ```bash
-python scripts/run_tests.py -v        # 或 python -m unittest discover -s tests -v
+python scripts/run_tests.py -v                    # 任意工作目录下可用，推荐
+python -m unittest discover -s tests -v           # 等价命令，需在项目根执行
+python scripts/run_tests.py tests.test_agentschema -v   # 只跑单个模块
 ```
 
 ## 边界（别当成 bug）
