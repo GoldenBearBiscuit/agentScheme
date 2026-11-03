@@ -74,7 +74,7 @@ python scripts/run_tests.py -v        # 或 python -m unittest discover -s tests
 
 ## 来源
 
-代码从 `mcp-assimilator`（`D:\Project\mcp-assimilator`）的 `assimilator/kernel/` 切片迁出（HEAD `b6528d6`，2026-11-03）。为了让新仓库可独立运行，一并本地化了三个被依赖的最小部分：
+代码从 `mcp-assimilator` 的 `assimilator/kernel/` 切片迁出（HEAD `b6528d6`，2026-11-03）。为了让新仓库可独立运行，一并本地化了三个被依赖的最小部分：
 
 | 原位置 | 现位置 | 处理 |
 |---|---|---|
