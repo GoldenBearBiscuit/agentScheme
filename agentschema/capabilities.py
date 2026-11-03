@@ -13,14 +13,9 @@ from pathlib import Path
 from typing import Any, Callable
 
 from .compare import compare
-from .model import (
-    Capability,
-    CapabilityRef,
-    PlanModel,
-    ExecutionStep,
-    FunctionalModel,
-    KernelError,
-)
+from .context_model import KernelError
+from .functional_model import Capability, CapabilityRef, FunctionalModel
+from .plan_model import ExecutionStep, PlanModel
 
 
 def text_normalize(text: str) -> str:

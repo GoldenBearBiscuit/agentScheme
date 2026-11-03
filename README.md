@@ -10,9 +10,9 @@
 |---|---|---|
 | 上下文模型 | `TaskSpec` / `ContextModel` / `RunReport` | 保存任务、阶段结果、证据、产物和运行报告 |
 | 功能模型 | `FunctionalModel` / `Capability` / `CapabilityRef` | 注册可寻址函数及其输入、输出、来源和 Oracle；不绑定执行风格 |
-| 执行模型 | `PlanModel` / `ExecutionStep` / `LoopEngine` / `MainAgent` | 注册和切换阶段计划、Provider 与结果投影 |
+| 执行模型 | `PlanModel` / `ExecutionStep` | 描述一个 Profile 的阶段、结果来源与 Provider 需求 |
 
-三个模型共享一个 `LoopEngine`。Tracing 横切三者；`pi` 与 `kiss` 对同一任务可以产生不同 Trace，但最终功能输出必须一致。
+三个模型之上是一个主循环：`LoopEngine` 执行单个 `PlanModel`，`MainAgent` 负责注册计划、可用性检查与调度（`loop.py`）。Tracing 横切三者；`pi` 与 `kiss` 对同一任务可以产生不同 Trace，但最终功能输出必须一致。
 
 ## 五个 Profile
 
@@ -42,14 +42,17 @@ python -m agentschema verify --path <你的纯函数文件> --symbol <函数名>
 
 ```
 agentschema/
-  model.py      三个模型的契约 + LoopEngine + MainAgent
-  capabilities.py  静态能力表、5 个内置 Plan、表达式持久化（ExpressionStore）
-  providers.py     DeepSeek Provider（执行模型的可插拔依赖）
-  cli.py           命令行（agents / capabilities / run / clone / verify / test）
-  compare.py       行为等价比较（差分验证的判定函数）
-  config.py        .env + 环境变量 → Config
-  llm.py           stdlib urllib 实现的 OpenAI 兼容客户端
-  log.py           日志门面（默认 stderr）
+  context_model.py     上下文模型（TaskSpec / ContextModel / RunReport）+ KernelError
+  functional_model.py  功能模型（Capability / CapabilityRef / FunctionalModel）
+  plan_model.py        执行模型（ExecutionStep / PlanModel）
+  loop.py              主循环（LoopEngine / MainAgent）
+  capabilities.py      静态能力表、5 个内置 Plan、表达式持久化（ExpressionStore）
+  providers.py         DeepSeek Provider（执行模型的可插拔依赖）
+  cli.py               命令行（agents / capabilities / run / clone / verify / test）
+  compare.py           行为等价比较（差分验证的判定函数）
+  config.py            .env + 环境变量 → Config
+  llm.py               stdlib urllib 实现的 OpenAI 兼容客户端
+  log.py               日志门面（默认 stderr）
 tests/             10 个用例，stdlib unittest
 scripts/           run_tests.py（本机 ACL 兼容引导）
 ```

@@ -9,7 +9,7 @@ from pathlib import Path
 from typing import Any
 
 from . import create_agent
-from .model import KernelError, TaskSpec
+from .context_model import KernelError, TaskSpec
 
 
 def _json_object(raw: str) -> dict[str, Any]:

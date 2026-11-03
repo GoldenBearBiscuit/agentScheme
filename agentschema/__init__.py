@@ -15,19 +15,10 @@ from typing import Any
 
 from .capabilities import ExpressionStore, builtin_plans, seed_functional_model
 from .config import Config
-from .model import (
-    Capability,
-    CapabilityRef,
-    ContextModel,
-    PlanModel,
-    ExecutionStep,
-    FunctionalModel,
-    KernelError,
-    LoopEngine,
-    MainAgent,
-    RunReport,
-    TaskSpec,
-)
+from .context_model import ContextModel, KernelError, RunReport, TaskSpec
+from .functional_model import Capability, CapabilityRef, FunctionalModel
+from .loop import LoopEngine, MainAgent
+from .plan_model import ExecutionStep, PlanModel
 
 
 def create_agent(
