@@ -1,0 +1,14 @@
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# 运行产物（可删可重建）
+workspace/
+
+# 本地配置
+.env
+.env.local
