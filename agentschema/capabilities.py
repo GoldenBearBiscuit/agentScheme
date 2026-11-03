@@ -16,7 +16,7 @@ from .compare import compare
 from .model import (
     Capability,
     CapabilityRef,
-    ExecutionPlan,
+    PlanModel,
     ExecutionStep,
     FunctionalModel,
     KernelError,
@@ -510,9 +510,9 @@ def seed_functional_model() -> FunctionalModel:
     return functional
 
 
-def builtin_plans() -> tuple[ExecutionPlan, ...]:
+def builtin_plans() -> tuple[PlanModel, ...]:
     return (
-        ExecutionPlan(
+        PlanModel(
             "kiss",
             (ExecutionStep(
                 "act",
@@ -522,7 +522,7 @@ def builtin_plans() -> tuple[ExecutionPlan, ...]:
             "act",
             "Direct execution of a shared capability",
         ),
-        ExecutionPlan(
+        PlanModel(
             "pi",
             (
                 ExecutionStep(
@@ -544,7 +544,7 @@ def builtin_plans() -> tuple[ExecutionPlan, ...]:
             "act",
             "Prepare, act, and observe using the same shared capability",
         ),
-        ExecutionPlan(
+        PlanModel(
             "clone",
             (
                 ExecutionStep(
@@ -606,7 +606,7 @@ def builtin_plans() -> tuple[ExecutionPlan, ...]:
             "Clone, independently verify, repair at most once, and register one pure function",
             provider="deepseek",
         ),
-        ExecutionPlan(
+        PlanModel(
             "test",
             (
                 ExecutionStep(
@@ -642,7 +642,7 @@ def builtin_plans() -> tuple[ExecutionPlan, ...]:
             "Generate inputs with a profile LLM and verify only against reference outcomes",
             provider="deepseek",
         ),
-        ExecutionPlan(
+        PlanModel(
             "verification",
             (
                 ExecutionStep(

@@ -127,7 +127,7 @@ class ExecutionStep:
 
 
 @dataclass(frozen=True)
-class ExecutionPlan:
+class PlanModel:
     profile: str
     steps: tuple[ExecutionStep, ...]
     result_step: str
@@ -202,7 +202,7 @@ class LoopEngine:
     def __init__(self, functional: FunctionalModel) -> None:
         self.functional = functional
 
-    def run(self, plan: ExecutionPlan, task: TaskSpec, *, provider: Any = None) -> RunReport:
+    def run(self, plan: PlanModel, task: TaskSpec, *, provider: Any = None) -> RunReport:
         run_id = f"run_{uuid.uuid4().hex[:12]}"
         context = ContextModel(run_id=run_id, profile=plan.profile, task=task)
         report = RunReport(run_id, task.task_id, plan.profile, "running")
@@ -262,9 +262,9 @@ class MainAgent:
         self.functional = functional
         self.providers = dict(providers or {})
         self.engine = LoopEngine(functional)
-        self._plans: dict[str, ExecutionPlan] = {}
+        self._plans: dict[str, PlanModel] = {}
 
-    def register(self, plan: ExecutionPlan) -> None:
+    def register(self, plan: PlanModel) -> None:
         if plan.profile in self._plans:
             raise KernelError(f"duplicate profile: {plan.profile}")
         if not plan.steps or len(plan.steps) > 32:
@@ -291,7 +291,7 @@ class MainAgent:
             for plan in sorted(self._plans.values(), key=lambda value: value.profile)
         ]
 
-    def _available(self, plan: ExecutionPlan) -> bool:
+    def _available(self, plan: PlanModel) -> bool:
         if plan.provider is None:
             return True
         provider = self.providers.get(plan.provider)

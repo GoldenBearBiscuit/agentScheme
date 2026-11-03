@@ -10,7 +10,7 @@
 |---|---|---|
 | 上下文模型 | `TaskSpec` / `ContextModel` / `RunReport` | 保存任务、阶段结果、证据、产物和运行报告 |
 | 功能模型 | `FunctionalModel` / `Capability` / `CapabilityRef` | 注册可寻址函数及其输入、输出、来源和 Oracle；不绑定执行风格 |
-| 执行模型 | `ExecutionPlan` / `ExecutionStep` / `LoopEngine` / `MainAgent` | 注册和切换阶段计划、Provider 与结果投影 |
+| 执行模型 | `PlanModel` / `ExecutionStep` / `LoopEngine` / `MainAgent` | 注册和切换阶段计划、Provider 与结果投影 |
 
 三个模型共享一个 `LoopEngine`。Tracing 横切三者；`pi` 与 `kiss` 对同一任务可以产生不同 Trace，但最终功能输出必须一致。
 

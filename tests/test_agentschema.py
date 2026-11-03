@@ -6,7 +6,7 @@ from pathlib import Path
 
 from agentschema import (
     CapabilityRef,
-    ExecutionPlan,
+    PlanModel,
     ExecutionStep,
     TaskSpec,
     create_agent,
@@ -111,7 +111,7 @@ class KernelTest(unittest.TestCase):
 
     def test_external_profile_uses_same_registry(self) -> None:
         agent = self.agent()
-        agent.register(ExecutionPlan(
+        agent.register(PlanModel(
             "external",
             (ExecutionStep(
                 "act",
