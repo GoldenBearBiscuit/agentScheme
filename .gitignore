@@ -12,3 +12,6 @@ workspace/
 # 本地配置
 .env
 .env.local
+
+# 工作区本地数据（个人笔记与记忆，不入公开仓库）
+.workbuddy/
