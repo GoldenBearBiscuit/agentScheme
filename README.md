@@ -1,6 +1,6 @@
 # agentschema
 
-三个模型（上下文 / 功能 / 执行）驱动的可验证 agent 内核。同一套静态能力库，可以用不同执行风格（kiss / pi）跑，也可以用 LLM 去"吸收"一个已有纯函数（clone / test / verification），但**期望值永远来自参考实现的真实运行结果，不来自 LLM**。
+三个模型（上下文 / 功能 / 执行）驱动的会话式 agent 内核。`LoopEngine` 跑一个五环节会话循环（compose → req → parse → execute → render），默认风格是中文优先的个人助手：模型是内核标配，工具说明从能力表自动生成，输入和展示也是能力、可换实现。
 
 零第三方依赖（纯 stdlib），Python ≥ 3.10。
 
@@ -8,56 +8,70 @@
 
 | 模型 | 契约 | 职责 |
 |---|---|---|
-| 上下文模型 | `TaskSpec` / `ContextModel` / `RunReport` | 保存任务、阶段结果、证据、产物和运行报告 |
-| 功能模型 | `FunctionalModel` / `Capability` / `CapabilityRef` | 注册可寻址函数及其输入、输出、来源和 Oracle；不绑定执行风格 |
-| 执行模型 | `PlanModel` / `ExecutionStep` | 描述一个 Profile 的阶段、结果来源与 Provider 需求 |
+| 上下文模型 | `ContextModel` | 保存会话消息历史、工具调用结果、证据链；记忆框架的选择收在域内部 |
+| 功能模型 | `FunctionalModel` / `Capability` | 注册可寻址函数及其契约；工具说明（OpenAI tools schema）从这里生成；按「持久时长 × 影响范围」二维分层（演进方向） |
+| 执行模型 | `Style`（`BehaviorStyle`） | 风格 = 系统提示词（人设）+ 行为参数（工具轮数上限等） |
 
-三个模型之上是一个主循环：`LoopEngine` 执行单个 `PlanModel`，`MainAgent` 负责注册计划、可用性检查与调度（`loop.py`）。Tracing 横切三者；`pi` 与 `kiss` 对同一任务可以产生不同 Trace，但最终功能输出必须一致。
-
-## 五个 Profile
-
-| Profile | 阶段 | 边界 |
-|---|---|---|
-| `kiss` | `act` | 直接调用任务指定的共享能力 |
-| `pi` | `prepare → act → observe` | 多步准备和观察，结果仍取 `act` |
-| `clone` | `load → propose → verify → repair → verify_repair → register` | LLM 只生成受限表达式；参考实现实测结果才是期望值；首次拒绝后最多修正一次 |
-| `test` | `load → cases → candidate → verify` | LLM 只生成输入用例，不生成期望值 |
-| `verification` | `load → candidate → verify` | 差分验证 + 6 个负向变异，检查验证器能否拒绝错误实现 |
+三个模型之上是会话引擎：`MainAgent` 顶层只认 **style 和 provider，两者平级且都必选**——模型是内核标配，装配期没 key 直接报错，不留到会话里才炸。`LoopEngine.turn()` 跑单轮，`loop()` 是死循环，quit / exit / Ctrl+C 退出。
 
 ## 快速开始
 
 ```bash
-python -m agentschema agents          # 列出 5 个执行 Profile
-python -m agentschema capabilities    # 列出静态能力表
-python -m agentschema run --profile pi --capability text.normalize --args '{"text":" a   b "}'
-
-# 不需要 key 的验证路径：手工候选 + 差分/变异检查
-python -m agentschema verify --path <你的纯函数文件> --symbol <函数名> \
-  --expression 'max(1, min(int(value), 6))' --cases '[{"value":0},{"value":9}]'
+cp .env.example .env                   # 填 DEEPSEEK_API_KEY
+python -m agentschema                  # 进入助手会话（默认入口）
+python -m agentschema agents           # 列出已注册风格（诊断命令）
+python -m agentschema capabilities     # 列出能力表（诊断命令）
 ```
 
-`clone` / `test` 需要 `DEEPSEEK_API_KEY`；没有 key 时返回 `unsupported`，不会伪造离线克隆结果。加 `--offline` 可强制禁止真实调用。
+会话示例：
+
+```
+[assistant] 助手已启动，quit/exit 退出
+> 帮我看看这句话几个词：hello world
+「hello world」按空格分隔算 2 个词（hello、world）。
+> quit
+再见。
+```
+
+可用模型列在项目根的 `providers.json`（对象列表，可直接手改），`--provider <name>` 按名字选，默认 `deepseek-flash`：
+
+```bash
+python -m agentschema --provider deepseek-v4-pro
+```
+
+## 系统提示词
+
+默认人设写在 `agentschema/prompt.py` 的 `DEFAULT_SYSTEM_PROMPT`。要换人设不必改代码：在项目根放一份 `SYSTEM_PROMPT.md`（也就是 `--root` 指向的目录），`create_agent()` 装配前会读它并整份替换默认值；没有这个文件就用内置默认。文件存在但读出来是空白会当场报错（`empty system prompt`），不会悄悄退回默认。
+
+## 内置能力
+
+| 能力 | 说明 |
+|---|---|
+| `text.normalize` / `text.word_count` | 文本处理（最小工具集示例） |
+| `io.input` / `io.render` | 终端输入 / 输出——展示是能力，可换 TUI、Web 或测试假件 |
 
 ## 目录
 
 ```
 agentschema/
-  context_model.py     上下文模型（TaskSpec / ContextModel / RunReport）+ KernelError
-  functional_model.py  功能模型（Capability / CapabilityRef / FunctionalModel）
-  plan_model.py        执行模型（ExecutionStep / PlanModel）
-  loop.py              主循环（LoopEngine / MainAgent）
-  capabilities.py      静态能力表、5 个内置 Plan、表达式持久化（ExpressionStore）
-  providers.py         DeepSeek Provider（执行模型的可插拔依赖）
-  cli.py               命令行（agents / capabilities / run / clone / verify / test）
-  compare.py           行为等价比较（差分验证的判定函数）
+  context_model.py     上下文模型（ContextModel：messages / steps / evidence）+ KernelError
+  functional_model.py  功能模型（Capability / FunctionalModel / tools_schema）
+  style.py             执行模型（BehaviorStyle / Style）
+  loop.py              会话引擎（LoopEngine: turn / loop；MainAgent）
+  factory.py           装配厂（create_agent：style + provider，都必选）
+  capabilities.py      内置能力表与 assistant 风格
+  prompt.py            系统提示词（默认人设 + 项目根 SYSTEM_PROMPT.md 覆盖）
+  providers.py         DeepSeek Provider（内核标配模型，不可用即装配报错）
+  cli.py               命令行（默认进会话；agents / capabilities 诊断）
   config.py            .env + 环境变量 → Config
-  llm.py               stdlib urllib 实现的 OpenAI 兼容客户端
+  llm.py               stdlib urllib 实现的 OpenAI 兼容客户端（chat_tools 协议）
   log.py               日志门面（默认 stderr）
-tests/             10 个用例，stdlib unittest
+tests/             会话循环、装配、能力表用例，stdlib unittest
 scripts/           run_tests.py（测试入口：sys.path 引导 + unittest 转发）
+providers.json     模型系列表（对象列表，可直接手改）
 ```
 
-运行产物写在 `workspace/`（`expressions.json` 存已固化的克隆能力，`llm_calls.jsonl` 存 LLM 调用记录），已在 `.gitignore` 中忽略。
+运行产物写在 `workspace/`（`llm_calls.jsonl` 存 LLM 调用记录），已在 `.gitignore` 中忽略。
 
 ## 测试
 
@@ -67,21 +81,11 @@ python -m unittest discover -s tests -v           # 等价命令，需在项目�
 python scripts/run_tests.py tests.test_agentschema -v   # 只跑单个模块
 ```
 
+测试同样走会话路径：FakeProvider 模拟 LLM 的回复或工具调用，io 能力在测试侧替换——没有"只跑一次"的特殊执行形态。
+
 ## 边界（别当成 bug）
 
-- **只支持可信旧模块中的同步纯 Python 函数**：加载参考实现会 import 旧模块；候选表达式不会作为 Python 模块执行，而是经过 AST 白名单后求值。
-- `accepted` 只表示**给定用例上**行为一致，不表示已证明完整语义等价。
-- 克隆成功的表达式写入 `workspace/expressions.json`，之后以共享能力形式恢复；被拒绝的候选不登记，也没有自动晋升。
-- Provider 不可用时返回 `unsupported`，不降级成"假装成功"。
-
-## 来源
-
-代码从 `mcp-assimilator` 的 `assimilator/kernel/` 切片迁出（HEAD `b6528d6`，2026-11-03）。为了让新仓库可独立运行，一并本地化了三个被依赖的最小部分：
-
-| 原位置 | 现位置 | 处理 |
-|---|---|---|
-| `assimilator/harness.py::compare` | `agentschema/compare.py` | 只抽比较函数，实现与文档保留 |
-| `assimilator/config.py` | `agentschema/config.py` | 砍掉 evidence/skills/registry/memory 等流水线路径，只留 LLM 与 workspace 配置 |
-| `assimilator/llm.py`、`assimilator/log.py` | 同名文件 | 整文件迁入；日志环境变量前缀改为 `AGENTSCHEMA_` |
-
-原仓库未做任何修改。
+- **模型必选**：没有 `DEEPSEEK_API_KEY` 时装配直接报错（`provider unavailable`），不会降级成"假装能聊"。
+- 工具执行失败会转成结构化错误载荷回给模型，由它向用户如实转述，不炸会话。
+- 单轮工具调用次数有上限（`BehaviorStyle.max_tool_rounds`，默认 8），超限如实提示。
+- clone / verification 等质量方法论能力已移除，后续以工具形态回归。

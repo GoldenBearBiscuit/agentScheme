@@ -1,0 +1,12 @@
+[
+  {
+    "name": "deepseek-flash",
+    "vendor": "deepseek",
+    "model": "deepseek-flash"
+  },
+  {
+    "name": "deepseek-v4-pro",
+    "vendor": "deepseek",
+    "model": "deepseek-v4-pro"
+  }
+]
